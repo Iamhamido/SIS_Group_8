@@ -12,3 +12,4 @@ C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\refint\SIS2.dll
 C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.pdb
 C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.genruntimeconfig.cache
 C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\ref\SIS2.dll
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.sourcelink.json

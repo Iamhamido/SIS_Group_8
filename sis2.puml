@@ -1,0 +1,203 @@
+@startuml StudentInternshipSystem
+
+!define ABSTRACT abstract
+!define ENUM enum
+
+abstract class Person {
+  - firstName: string
+  - lastName: string
+}
+
+' class Coordinator {
+'   - coordinatorId: int
+'   - Password: int
+' }
+
+class Student {
+  - studentNumber: int
+}
+
+class ContactPerson {
+  - functionTitle: string
+  - department: string
+  - phone: string
+  - email: string
+}
+
+class Period {
+  year: int
+  semester: Semester
+}
+
+abstract class Organization {
+  - organizationId: int
+  - name: string
+  - address: string
+  - phone: string
+  - email: string
+  - url: string
+  - contactPerson: ContactPerson
+  + ValidateOrganizationData(): bool
+  + addInternship(internship: Internship): bool
+}
+
+interface IMenu {
+  + ShowMenu(): void
+  + HandleChoice(choice: string): void
+}
+
+class CoordinatorMenu {
+  - service: InternshipService
+  - coordinator: Coordinator
+  - AddAssignment(assignment: Assignment): bool
+  - RemoveAssignment(assignment: Assignment): bool
+  - WithdrawInternship(internship: Internship): bool
+  - GradeAssignment(assignment: Assignment): bool
+  - viewContactPersonsByInternshipId(internshipId: int): List<ContactPerson>
+  - addOrganization(organization: Organization): bool
+  - addInternship(internship: Internship): bool
+  + viewAllOrganizations(): List<Organization>
+  + viewInternshipsByOrganizationId(organizationId: int): List<Internship>
+  + GetInternshipsByPeriodAndType(period: Period, type: AssignmentType): List<Internship>
+}
+
+class StudentMenu {
+  - service: InternshipService
+  - student: Student
+  - assignments: List<Assignment>
+
+  + HandleChoice(choice: string): void
+  - ViewAvailableInternships(): void
+  - ViewInternshipDetails(): void
+  - ApplyForInternship(): void
+  - ViewMyAssignments(): void
+  + viewAllOrganizations(): List<Organization>
+  + viewInternshipsByOrganizationId(organizationId: int): List<Internship>
+  + GetInternshipsByPeriodAndType(period: Period, type: AssignmentType): List<Internship>
+}
+
+abstract class Internship {
+  - internshipId: int
+  - organization: Organization
+  - city: string
+  - dateOfSubmission: long
+  - projectTitle: string
+  - shortDescription: string
+  - longDescription: string
+  - period: Period
+  - enrolledStudents: List<Student>
+  - contactPersons: List<ContactPerson>
+  - isActive: bool
+  - period: Period
+  + GetDetails(): string
+}
+
+
+enum AssignmentType {
+  RESEARCH
+  MINOR
+  ENGINEERING
+}
+
+Class Assignment {
+  -student: Student
+  - finalGrade: double
+  - internship : Internship
+  - isCompleted: bool
+  -assignmentType: AssignmentType
+}
+
+note right of Assignment
+  An assignment is marked as completed
+  when a final grade has been assigned
+end note
+
+class Company {
+}
+
+class ResearchGroup {
+}
+
+class EducationalInstitute {
+  - instituteType: InstituteType
+}
+
+enum InstituteType {
+  WO
+  HBO
+  INTERNATIONAL
+}
+
+enum Semester {
+  I 
+  II
+}
+
+class IntermediateInternship {
+
+}
+
+class MinorInternship {
+  organization: EducationalInstitute
+  minor_id: int
+}
+
+class GraduationInternship{
+
+}
+
+' Inheritance relationships
+Person <|-- Student
+Person <|-- ContactPerson
+' Person <|-- Coordinator
+Organization <|-[dashed]- Company
+Organization <|-[dashed]- ResearchGroup
+Organization <|-[dashed]- EducationalInstitute
+Internship   <|-- IntermediateInternship
+Internship   <|-- MinorInternship
+Internship   <|-- GraduationInternship
+Assignment   <|-- AssignmentType
+Period       <|-- Semester
+EducationalInstitute <|-- InstituteType
+
+CoordinatorMenu ..|> IMenu
+StudentMenu ..|> IMenu
+
+StudentMenu --> Student : for >
+
+' CoordinatorMenu --> Coordinator : for >
+
+
+
+' Additional relationships
+Student "1" --* "0..*" Assignment : enrolls >
+Assignment "1" --o "0..1" Internship
+ContactPerson "1..*" --> "1" Organization : is part of >
+ContactPerson "1..*" --o "1..*" Internship : is responsible for >
+Internship "1" --o "0..*" Organization : offers >
+Period "1" --o "0..*" Internship : occurs in >
+Student "0..*" --o "0..*" Internship : applies to >
+
+
+note right of Internship
+  Internships can have no students if none have enrolled for it yet
+end note
+note right of Student
+  A student cannot apply to
+  multiple internships
+  in the same period
+end note
+
+note right of ContactPerson
+  Contact persons are
+  associated with
+  exactly one
+  organization
+end note
+
+note right of Organization
+  Organization data must
+  be unique and validated
+end note
+
+@enduml
