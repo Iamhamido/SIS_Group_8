@@ -1,0 +1,14 @@
+C:\Users\abdih\.NET_project\SIS2\SIS2\bin\Debug\net9.0\SIS2.exe
+C:\Users\abdih\.NET_project\SIS2\SIS2\bin\Debug\net9.0\SIS2.deps.json
+C:\Users\abdih\.NET_project\SIS2\SIS2\bin\Debug\net9.0\SIS2.runtimeconfig.json
+C:\Users\abdih\.NET_project\SIS2\SIS2\bin\Debug\net9.0\SIS2.dll
+C:\Users\abdih\.NET_project\SIS2\SIS2\bin\Debug\net9.0\SIS2.pdb
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.AssemblyInfoInputs.cache
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.AssemblyInfo.cs
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.csproj.CoreCompileInputs.cache
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.dll
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\refint\SIS2.dll
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.pdb
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\SIS2.genruntimeconfig.cache
+C:\Users\abdih\.NET_project\SIS2\SIS2\obj\Debug\net9.0\ref\SIS2.dll
