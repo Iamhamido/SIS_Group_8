@@ -36,9 +36,9 @@ namespace SIS.Menus
             Console.WriteLine("6. Add Assignment");
             Console.WriteLine("7. Remove Assignment");
             Console.WriteLine("8. Grade Assignment");
-            Console.WriteLine("9. View Contact Persons by Internship");
-            Console.WriteLine("10. Withdraw Internship");
-            Console.WriteLine("11. Exit");
+            //Console.WriteLine("9. View Contact Persons by Internship");
+            Console.WriteLine("9. Withdraw Internship");
+            Console.WriteLine("10. Exit");
             Console.WriteLine("=====================================");
             Console.Write("Enter your choice: ");
         }
@@ -71,13 +71,13 @@ namespace SIS.Menus
                 case "8":
                     GradeAssignment();
                     break;
+                // case "9":
+                //     //ViewContactPersonsByInternshipId();
+                //     break;
                 case "9":
-                    ViewContactPersonsByInternshipId();
-                    break;
-                case "10":
                     WithdrawInternship();
                     break;
-                case "11":
+                case "10":
                     Console.WriteLine("Goodbye!");
                     Environment.Exit(0);
                     break;
@@ -493,7 +493,7 @@ namespace SIS.Menus
         private bool GradeAssignment()
         {
             Console.WriteLine("\n=== GRADE ASSIGNMENT ===");
-            
+    
             Console.Write("Student Number: ");
             if (!int.TryParse(Console.ReadLine(), out int studentNumber))
             {
@@ -501,12 +501,13 @@ namespace SIS.Menus
                 return false;
             }
             
-            var student = _service.GetStudentByNumber(studentNumber);
-            if (student == null)
-            {
-                Console.WriteLine("Student not found.");
-                return false;
-            }
+            // Remove this check since service handles it
+            // var student = _service.GetStudentByNumber(studentNumber);
+            // if (student == null)
+            // {
+            //     Console.WriteLine("Student not found.");
+            //     return false;
+            // }
             
             Console.Write("Grade (1.0-10.0): ");
             if (!double.TryParse(Console.ReadLine(), out double grade) || grade < 1.0 || grade > 10.0)
@@ -515,46 +516,47 @@ namespace SIS.Menus
                 return false;
             }
             
-            if (_service.GradeAssignment(student, grade))
+            // Fixed: Pass studentNumber instead of student object
+            if (_service.GradeAssignment(studentNumber, grade))
             {
                 Console.WriteLine("Grade assigned successfully!");
                 return true;
             }
             else
             {
-                Console.WriteLine("Failed to assign grade.");
+                Console.WriteLine("Failed to assign grade. Student might not have an assignment.");
                 return false;
             }
         }
 
-        private void ViewContactPersonsByInternshipId()
-        {
-            Console.Write("Enter Internship ID: ");
-            if (!int.TryParse(Console.ReadLine(), out int internshipId))
-            {
-                Console.WriteLine("Invalid ID.");
-                return;
-            }
+        // private void ViewContactPersonsByInternshipId()
+        // {
+        //     Console.Write("Enter Internship ID: ");
+        //     if (!int.TryParse(Console.ReadLine(), out int internshipId))
+        //     {
+        //         Console.WriteLine("Invalid ID.");
+        //         return;
+        //     }
 
-            var contactPersons = _service.GetContactPersonsByInternshipId(internshipId);
+        //     var contactPersons = _service.GetContactPersonsByInternshipId(internshipId);
             
-            Console.WriteLine($"\n=== CONTACT PERSONS FOR INTERNSHIP ID: {internshipId} ===");
-            Console.WriteLine($"Total: {contactPersons.Count}");
-            Console.WriteLine();
+        //     Console.WriteLine($"\n=== CONTACT PERSONS FOR INTERNSHIP ID: {internshipId} ===");
+        //     Console.WriteLine($"Total: {contactPersons.Count}");
+        //     Console.WriteLine();
             
-            foreach (var cp in contactPersons)
-            {
-                Console.WriteLine($"Name: {cp.FullName}");
-                Console.WriteLine($"Title: {cp.FunctionTitle}");
-                Console.WriteLine($"Department: {cp.Department}");
-                Console.WriteLine($"Email: {cp.Email}");
-                Console.WriteLine($"Phone: {cp.Phone}");
-                Console.WriteLine();
-            }
+        //     foreach (var cp in contactPersons)
+        //     {
+        //         Console.WriteLine($"Name: {cp.FullName}");
+        //         Console.WriteLine($"Title: {cp.FunctionTitle}");
+        //         Console.WriteLine($"Department: {cp.Department}");
+        //         Console.WriteLine($"Email: {cp.Email}");
+        //         Console.WriteLine($"Phone: {cp.Phone}");
+        //         Console.WriteLine();
+        //     }
             
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
-        }
+        //     Console.WriteLine("Press any key to continue...");
+        //     Console.ReadKey();
+        // }
 
         private void WithdrawInternship()
         {

@@ -1,3 +1,4 @@
+using SIS.Models.Assignment;
 using SIS.Models.Period;
 
 namespace SIS.Models.Internship
@@ -11,6 +12,7 @@ namespace SIS.Models.Internship
                                   string shortDescription, string longDescription, Period.Period period)
             : base(organization, city, dateOfSubmission, projectTitle, shortDescription, longDescription, period)
         {
+        
         }
     }
 }

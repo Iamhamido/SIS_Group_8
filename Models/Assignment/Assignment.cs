@@ -6,7 +6,7 @@ namespace SIS.Models.Assignment
     public class Assignment
     {
         public Student Student { get; set; }
-        public double? FinalGrade { get; private set; }
+        public double? FinalGrade { get; set; }
         public Internship.Internship Internship { get; set; }
         public bool IsCompleted => FinalGrade.HasValue;
         public AssignmentType AssignmentType { get; set; }

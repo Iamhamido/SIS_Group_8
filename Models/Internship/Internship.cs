@@ -9,7 +9,7 @@ namespace SIS.Models.Internship
     {
         private static int _nextId = 1;
         
-        public int InternshipId { get; }
+        public int InternshipId { get; set;}
         public Organization.Organization Organization { get; set; }
         public string City { get; set; }
         public long DateOfSubmission { get; set; }

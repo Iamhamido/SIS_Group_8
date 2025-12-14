@@ -15,13 +15,11 @@ namespace SIS.Menus
     {
         private InternshipService _service;
         private Student _student;
-        private List<Assignment> _assignments;
 
         public StudentMenu(InternshipService service, Student student)
         {
             _service = service;
             _student = student;
-            _assignments = new List<Assignment>();
         }
 
         public void ShowMenu()
@@ -85,6 +83,8 @@ namespace SIS.Menus
             if (!TryParsePeriod(periodInput, out var period))
             {
                 Console.WriteLine("Invalid period format. Use format: YYYY-I or YYYY-II");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
                 return;
             }
 
@@ -94,25 +94,45 @@ namespace SIS.Menus
             Console.WriteLine("3. RESEARCH");
             Console.Write("Select type (1-3): ");
             
-            if (!Enum.TryParse<AssignmentType>(Console.ReadLine(), out var type))
+            try
             {
-                Console.WriteLine("Invalid type selected.");
-                return;
-            }
+                var typeChoice = Console.ReadLine();
+                AssignmentType type = typeChoice switch
+                {
+                    "1" => AssignmentType.ENGINEERING,
+                    "2" => AssignmentType.MINOR,
+                    "3" => AssignmentType.RESEARCH,
+                    _ => throw new ArgumentException("Invalid choice")
+                };
 
-            var internships = _service.GetInternshipsByPeriodAndType(period, type);
-            
-            Console.WriteLine($"\nAvailable Internships for {period}, Type: {type}");
-            Console.WriteLine("===========================================");
-            
-            int counter = 1;
-            foreach (var internship in internships)
+                var internships = _service.GetInternshipsByPeriodAndType(period, type);
+                
+                Console.WriteLine($"\nAvailable Internships for {period}, Type: {type}");
+                Console.WriteLine("===========================================");
+                
+                if (internships.Count == 0)
+                {
+                    Console.WriteLine("No internships available for the selected criteria.");
+                }
+                else
+                {
+                    int counter = 1;
+                    foreach (var internship in internships)
+                    {
+                        Console.WriteLine($"{counter++}. {internship.Organization.Name} - {internship.City}");
+                        Console.WriteLine($"   Project: {internship.ProjectTitle}");
+                        Console.WriteLine($"   Short Description: {internship.ShortDescription}");
+                        if (internship.DateOfSubmission > 0)
+                        {
+                            Console.WriteLine($"   Date: {DateTimeOffset.FromUnixTimeMilliseconds(internship.DateOfSubmission):yyyy-MM-dd}");
+                        }
+                        Console.WriteLine();
+                    }
+                }
+            }
+            catch (ArgumentException ex)
             {
-                Console.WriteLine($"{counter++}. {internship.Organization.Name} - {internship.City}");
-                Console.WriteLine($"   Project: {internship.ProjectTitle}");
-                Console.WriteLine($"   Short Description: {internship.ShortDescription}");
-                Console.WriteLine($"   Date: {DateTimeOffset.FromUnixTimeMilliseconds(internship.DateOfSubmission):yyyy-MM-dd}");
-                Console.WriteLine();
+                Console.WriteLine($"Error: {ex.Message}");
             }
             
             Console.WriteLine("Press any key to continue...");
@@ -125,6 +145,8 @@ namespace SIS.Menus
             if (!int.TryParse(Console.ReadLine(), out int internshipId))
             {
                 Console.WriteLine("Invalid ID format.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
                 return;
             }
 
@@ -132,23 +154,47 @@ namespace SIS.Menus
             if (internship == null)
             {
                 Console.WriteLine("Internship not found.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
                 return;
             }
 
             Console.WriteLine("\n=== INTERNSHIP DETAILS ===");
-            Console.WriteLine(internship.GetDetails());
-            
-            var contactPersons = _service.GetContactPersonsByInternshipId(internshipId);
-            Console.WriteLine("\n=== CONTACT PERSONS ===");
-            foreach (var cp in contactPersons)
+            Console.WriteLine($"ID: {internship.InternshipId}");
+            Console.WriteLine($"Project: {internship.ProjectTitle}");
+            Console.WriteLine($"Organization: {internship.Organization.Name}");
+            Console.WriteLine($"City: {internship.City}");
+            Console.WriteLine($"Period: {internship.Period}");
+            Console.WriteLine($"Type: {internship.AssignmentType}");
+            Console.WriteLine($"Description: {internship.ShortDescription}");
+            if (!string.IsNullOrEmpty(internship.LongDescription))
             {
-                Console.WriteLine($"Name: {cp.FullName}");
-                Console.WriteLine($"Title: {cp.FunctionTitle}");
-                Console.WriteLine($"Department: {cp.Department}");
-                Console.WriteLine($"Email: {cp.Email}");
-                Console.WriteLine($"Phone: {cp.Phone}");
-                Console.WriteLine();
+                Console.WriteLine($"\nDetailed Description: {internship.LongDescription}");
             }
+            if (internship.DateOfSubmission > 0)
+            {
+                Console.WriteLine($"Submission Date: {DateTimeOffset.FromUnixTimeMilliseconds(internship.DateOfSubmission):yyyy-MM-dd}");
+            }
+            Console.WriteLine($"Active: {(internship.IsActive ? "Yes" : "No")}");
+            
+            // var contactPersons = _service.GetContactPersonsByInternshipId(internshipId);
+            // Console.WriteLine("\n=== CONTACT PERSONS ===");
+            // if (contactPersons.Count == 0)
+            // {
+            //     Console.WriteLine("No contact persons assigned.");
+            // }
+            // else
+            // {
+            //     foreach (var cp in contactPersons)
+            //     {
+            //         Console.WriteLine($"Name: {cp.FullName}");
+            //         Console.WriteLine($"Title: {cp.FunctionTitle}");
+            //         Console.WriteLine($"Department: {cp.Department}");
+            //         Console.WriteLine($"Email: {cp.Email}");
+            //         Console.WriteLine($"Phone: {cp.Phone}");
+            //         Console.WriteLine();
+            //     }
+            // }
             
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
@@ -160,38 +206,52 @@ namespace SIS.Menus
             if (!int.TryParse(Console.ReadLine(), out int internshipId))
             {
                 Console.WriteLine("Invalid ID format.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
                 return;
             }
 
             var internship = _service.GetInternshipById(internshipId);
             if (internship == null || !internship.IsActive)
             {
-                Console.WriteLine("Internship not available.");
+                Console.WriteLine("Internship not available or inactive.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
                 return;
             }
 
-            Console.WriteLine("Select Assignment Type:");
-            Console.WriteLine("1. RESEARCH");
-            Console.WriteLine("2. MINOR");
-            Console.WriteLine("3. ENGINEERING");
-            Console.Write("Choice: ");
-            
-            if (!Enum.TryParse<AssignmentType>(Console.ReadLine(), out var assignmentType))
+            try
             {
-                Console.WriteLine("Invalid assignment type.");
-                return;
-            }
+                Console.WriteLine("Select Assignment Type:");
+                Console.WriteLine("1. RESEARCH");
+                Console.WriteLine("2. MINOR");
+                Console.WriteLine("3. ENGINEERING");
+                Console.Write("Choice: ");
+                
+                var typeChoice = Console.ReadLine();
+                AssignmentType assignmentType = typeChoice switch
+                {
+                    "1" => AssignmentType.RESEARCH,
+                    "2" => AssignmentType.MINOR,
+                    "3" => AssignmentType.ENGINEERING,
+                    _ => throw new ArgumentException("Invalid assignment type.")
+                };
 
-            var assignment = new Assignment(_student, internship, assignmentType);
-            
-            if (_service.AddAssignment(assignment))
-            {
-                Console.WriteLine("Application submitted successfully!");
-                Console.WriteLine("Please email the assignment form to the coordinator.");
+                var assignment = new Assignment(_student, internship, assignmentType);
+                
+                if (_service.AddAssignment(assignment))
+                {
+                    Console.WriteLine("Application submitted successfully!");
+                    Console.WriteLine("Please email the assignment form to the coordinator.");
+                }
+                else
+                {
+                    Console.WriteLine("Failed to apply. You may already have an internship in this period.");
+                }
             }
-            else
+            catch (ArgumentException ex)
             {
-                Console.WriteLine("Failed to apply. You may already have an internship in this period.");
+                Console.WriteLine($"Error: {ex.Message}");
             }
             
             Console.WriteLine("Press any key to continue...");
@@ -225,14 +285,21 @@ namespace SIS.Menus
             var organizations = _service.GetAllOrganizations();
             
             Console.WriteLine("\n=== ALL ORGANIZATIONS ===");
-            foreach (var org in organizations)
+            if (organizations.Count == 0)
             {
-                Console.WriteLine($"ID: {org.OrganizationId}");
-                Console.WriteLine($"Name: {org.Name}");
-                Console.WriteLine($"Address: {org.Address}");
-                Console.WriteLine($"Email: {org.Email}");
-                Console.WriteLine($"Contact: {org.ContactPerson?.FullName}");
-                Console.WriteLine();
+                Console.WriteLine("No organizations found.");
+            }
+            else
+            {
+                foreach (var org in organizations)
+                {
+                    Console.WriteLine($"ID: {org.OrganizationId}");
+                    Console.WriteLine($"Name: {org.Name}");
+                    Console.WriteLine($"Address: {org.Address}");
+                    Console.WriteLine($"Email: {org.Email}");
+                    Console.WriteLine($"Contact: {org.ContactPerson?.FullName ?? "Not specified"}");
+                    Console.WriteLine();
+                }
             }
             
             Console.WriteLine("Press any key to continue...");
@@ -245,20 +312,29 @@ namespace SIS.Menus
             if (!int.TryParse(Console.ReadLine(), out int organizationId))
             {
                 Console.WriteLine("Invalid ID format.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
                 return;
             }
 
             var internships = _service.GetInternshipsByOrganizationId(organizationId);
             
             Console.WriteLine($"\n=== INTERNSHIPS FOR ORGANIZATION ID: {organizationId} ===");
-            foreach (var internship in internships)
+            if (internships.Count == 0)
             {
-                Console.WriteLine($"ID: {internship.InternshipId}");
-                Console.WriteLine($"Project: {internship.ProjectTitle}");
-                Console.WriteLine($"City: {internship.City}");
-                Console.WriteLine($"Period: {internship.Period}");
-                Console.WriteLine($"Type: {internship.AssignmentType}");
-                Console.WriteLine();
+                Console.WriteLine("No internships found for this organization.");
+            }
+            else
+            {
+                foreach (var internship in internships)
+                {
+                    Console.WriteLine($"ID: {internship.InternshipId}");
+                    Console.WriteLine($"Project: {internship.ProjectTitle}");
+                    Console.WriteLine($"City: {internship.City}");
+                    Console.WriteLine($"Period: {internship.Period}");
+                    Console.WriteLine($"Type: {internship.AssignmentType}");
+                    Console.WriteLine();
+                }
             }
             
             Console.WriteLine("Press any key to continue...");
@@ -273,31 +349,50 @@ namespace SIS.Menus
             if (!TryParsePeriod(periodInput, out var period))
             {
                 Console.WriteLine("Invalid period format.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
                 return;
             }
 
-            Console.WriteLine("Select Assignment Type:");
-            Console.WriteLine("1. RESEARCH");
-            Console.WriteLine("2. MINOR");
-            Console.WriteLine("3. ENGINEERING");
-            Console.Write("Choice: ");
-            
-            if (!Enum.TryParse<AssignmentType>(Console.ReadLine(), out var type))
+            try
             {
-                Console.WriteLine("Invalid type.");
-                return;
-            }
+                Console.WriteLine("Select Assignment Type:");
+                Console.WriteLine("1. RESEARCH");
+                Console.WriteLine("2. MINOR");
+                Console.WriteLine("3. ENGINEERING");
+                Console.Write("Choice: ");
+                
+                var typeChoice = Console.ReadLine();
+                AssignmentType type = typeChoice switch
+                {
+                    "1" => AssignmentType.RESEARCH,
+                    "2" => AssignmentType.MINOR,
+                    "3" => AssignmentType.ENGINEERING,
+                    _ => throw new ArgumentException("Invalid type.")
+                };
 
-            var internships = _service.GetInternshipsByPeriodAndType(period, type);
-            
-            Console.WriteLine($"\n=== INTERNSHIPS FOR {period}, TYPE: {type} ===");
-            foreach (var internship in internships)
+                var internships = _service.GetInternshipsByPeriodAndType(period, type);
+                
+                Console.WriteLine($"\n=== INTERNSHIPS FOR {period}, TYPE: {type} ===");
+                if (internships.Count == 0)
+                {
+                    Console.WriteLine("No internships found for the selected criteria.");
+                }
+                else
+                {
+                    foreach (var internship in internships)
+                    {
+                        Console.WriteLine($"ID: {internship.InternshipId}");
+                        Console.WriteLine($"Organization: {internship.Organization.Name}");
+                        Console.WriteLine($"Project: {internship.ProjectTitle}");
+                        Console.WriteLine($"City: {internship.City}");
+                        Console.WriteLine();
+                    }
+                }
+            }
+            catch (ArgumentException ex)
             {
-                Console.WriteLine($"ID: {internship.InternshipId}");
-                Console.WriteLine($"Organization: {internship.Organization.Name}");
-                Console.WriteLine($"Project: {internship.ProjectTitle}");
-                Console.WriteLine($"City: {internship.City}");
-                Console.WriteLine();
+                Console.WriteLine($"Error: {ex.Message}");
             }
             
             Console.WriteLine("Press any key to continue...");

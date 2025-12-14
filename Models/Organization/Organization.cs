@@ -8,7 +8,7 @@ namespace SIS.Models.Organization
     {
         private static int _nextId = 1;
         
-        public int OrganizationId { get; }
+        public int OrganizationId { get; set;}
         public string Name { get; set; }
         public string Address { get; set; }
         public string Phone { get; set; }

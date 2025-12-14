@@ -6,22 +6,32 @@ using SIS.Models.Assignment;
 using SIS.Models.Internship;
 using SIS.Models.Organization;
 using SIS.Models.Period;
+using SIS.Repositories;
 
 namespace SIS.Services
 {
     public class InternshipService
     {
-        private List<Organization> _organizations;
-        private List<Internship> _internships;
-        private List<Assignment> _assignments;
-        private List<Student> _students;
+        private readonly IOrganizationRepository _organizationRepository;
+        private readonly IInternshipRepository _internshipRepository;
+        private readonly IAssignmentRepository _assignmentRepository;
+        private readonly IStudentRepository _studentRepository;
+        //private readonly IContactPersonRepository _contactPersonRepository;
 
-        public InternshipService()
+        // Constructor for database repositories
+        public InternshipService(
+            IOrganizationRepository organizationRepository,
+            IInternshipRepository internshipRepository,
+            IAssignmentRepository assignmentRepository,
+            IStudentRepository studentRepository
+            //IContactPersonRepository contactPersonRepository
+            )
         {
-            _organizations = new List<Organization>();
-            _internships = new List<Internship>();
-            _assignments = new List<Assignment>();
-            _students = new List<Student>();
+            _organizationRepository = organizationRepository;
+            _internshipRepository = internshipRepository;
+            _assignmentRepository = assignmentRepository;
+            _studentRepository = studentRepository;
+            //_contactPersonRepository = contactPersonRepository;
         }
 
         // Organization Methods
@@ -30,18 +40,17 @@ namespace SIS.Services
             if (organization == null || !organization.ValidateOrganizationData())
                 return false;
                 
-            if (_organizations.Any(o => o.Equals(organization)))
-                return false;
-                
-            _organizations.Add(organization);
-            return true;
+            return _organizationRepository.Add(organization);
         }
 
         public List<Organization> GetAllOrganizations()
         {
-            return _organizations
-                .OrderBy(o => o.Name)
-                .ToList();
+            return _organizationRepository.GetAll().ToList();
+        }
+
+        public Organization GetOrganizationById(int organizationId)
+        {
+            return _organizationRepository.GetById(organizationId);
         }
 
         // Internship Methods
@@ -50,51 +59,27 @@ namespace SIS.Services
             if (internship == null || !internship.IsActive)
                 return false;
                 
-            _internships.Add(internship);
-            
-            // Link to organization
-            internship.Organization?.AddInternship(internship);
-            
-            return true;
+            return _internshipRepository.Add(internship);
         }
 
         public List<Internship> GetInternshipsByOrganizationId(int organizationId)
         {
-            return _internships
-                .Where(i => i.Organization?.OrganizationId == organizationId && i.IsActive)
-                .OrderBy(i => i.City)
-                .ThenBy(i => i.Organization?.Name)
-                .ToList();
+            return _organizationRepository.GetInternshipsByOrganizationId(organizationId);
         }
 
         public List<Internship> GetInternshipsByPeriodAndType(Period period, AssignmentType type)
         {
-            return _internships
-                .Where(i => i.Period.Equals(period) && 
-                           i.AssignmentType == type && 
-                           i.IsActive)
-                .OrderBy(i => i.City)
-                .ThenBy(i => i.Organization?.Name)
-                .ToList();
+            return _internshipRepository.GetInternshipsByPeriodAndType(period, type);
         }
 
         public Internship GetInternshipById(int internshipId)
         {
-            return _internships.FirstOrDefault(i => i.InternshipId == internshipId);
+            return _internshipRepository.GetById(internshipId);
         }
 
         public bool WithdrawInternship(int internshipId)
         {
-            var internship = GetInternshipById(internshipId);
-            if (internship == null)
-                return false;
-                
-            internship.IsActive = false;
-            
-            // Remove all assignments for this internship
-            _assignments.RemoveAll(a => a.Internship.InternshipId == internshipId);
-            
-            return true;
+            return _internshipRepository.WithdrawInternship(internshipId);
         }
 
         // Assignment Methods
@@ -104,88 +89,176 @@ namespace SIS.Services
                 return false;
                 
             // Check if student already has assignment in same period
-            var studentAssignments = _assignments
-                .Where(a => a.Student.StudentNumber == assignment.Student.StudentNumber)
-                .ToList();
-                
-            if (studentAssignments.Any(a => a.Internship.Period.Equals(assignment.Internship.Period)))
+            if (_assignmentRepository.HasAssignmentInPeriod(
+                assignment.Student.StudentNumber, 
+                assignment.Internship.Period))
+            {
                 return false;
+            }
                 
-            _assignments.Add(assignment);
-            assignment.Internship.EnrollStudent(assignment.Student);
-            
-            return true;
+            return _assignmentRepository.AddAssignment(assignment);
         }
 
         public bool RemoveAssignment(Assignment assignment)
         {
-            if (assignment == null)
-                return false;
-                
-            var result = _assignments.Remove(assignment);
-            if (result)
-            {
-                assignment.Internship.WithdrawStudent(assignment.Student);
-            }
-            
-            return result;
+            return _assignmentRepository.RemoveAssignment(assignment);
         }
 
-        public bool GradeAssignment(Student student, double grade)
+        public bool GradeAssignment(int studentNumber, double grade)
         {
-            var assignment = _assignments.FirstOrDefault(a => a.Student.StudentNumber == student.StudentNumber);
-            if (assignment == null)
-                return false;
-                
-            return assignment.GradeAssignment(grade);
+            return _assignmentRepository.GradeAssignment(studentNumber, grade);
         }
 
         // Student Methods
         public bool RegisterStudent(Student student)
         {
-            if (student == null || _students.Any(s => s.StudentNumber == student.StudentNumber))
+            if (student == null || _studentRepository.StudentExists(student.StudentNumber))
                 return false;
                 
-            _students.Add(student);
-            return true;
+            return _studentRepository.RegisterStudent(student);
         }
 
         public Student GetStudentByNumber(int studentNumber)
         {
-            return _students.FirstOrDefault(s => s.StudentNumber == studentNumber);
+            return _studentRepository.GetByStudentNumber(studentNumber);
         }
 
         // Contact Person Methods
-        public List<ContactPerson> GetContactPersonsByInternshipId(int internshipId)
-        {
-            var internship = GetInternshipById(internshipId);
-            if (internship == null)
-                return new List<ContactPerson>();
-                
-            return internship.ContactPersons
-                .OrderBy(cp => cp.LastName)
-                .ThenBy(cp => cp.FirstName)
-                .ToList();
-        }
+        // public List<ContactPerson> GetContactPersonsByInternshipId(int internshipId)
+        // {
+        //     return _internshipRepository.GetContactPersonsByInternshipId(internshipId);
+        // }
 
         // Utility Methods
-        public List<Internship> GetAvailableInternshipsForStudent(Student student, Period period)
-        {
-            // Get internships where student is not enrolled and is active
-            return _internships
-                .Where(i => i.IsActive && 
-                           i.Period.Equals(period) &&
-                           !i.EnrolledStudents.Any(s => s.StudentNumber == student.StudentNumber))
-                .OrderBy(i => i.City)
-                .ThenBy(i => i.Organization?.Name)
-                .ToList();
-        }
+        
+        //comment this for now but I want this in the code later!!!!!
+        // public List<Internship> GetAvailableInternshipsForStudent(Student student, Period period)
+        // {
+        //     return _internshipRepository.GetAvailableInternshipsForStudent(student.StudentNumber, period);
+        // }
 
         public List<Assignment> GetAssignmentsForStudent(int studentNumber)
         {
-            return _assignments
-                .Where(a => a.Student.StudentNumber == studentNumber)
-                .ToList();
+            return _assignmentRepository.GetAssignmentsForStudent(studentNumber);
+        }
+
+        // Additional methods that might be needed
+        public List<Internship> GetActiveInternships()
+        {
+            return _internshipRepository.GetActiveInternships();
+        }
+
+        public bool EnrollStudentInInternship(int internshipId, int studentNumber)
+        {
+            var student = GetStudentByNumber(studentNumber);
+            if (student == null) return false;
+            
+            return _internshipRepository.EnrollStudent(internshipId, student);
+        }
+
+        public List<Student> GetEnrolledStudents(int internshipId)
+        {
+            return _internshipRepository.GetEnrolledStudents(internshipId);
+        }
+
+        public List<Internship> SearchInternships(string searchTerm)
+        {
+            return _internshipRepository.Search(searchTerm);
+        }
+
+        public List<Internship> GetInternshipsByCity(string city)
+        {
+            return _internshipRepository.GetByCity(city);
+        }
+
+        public int GetEnrolledStudentCount(int internshipId)
+        {
+            return _internshipRepository.GetEnrolledStudentCount(internshipId);
+        }
+
+        // public bool IsStudentEnrolled(int internshipId, int studentNumber)
+        // {
+        //     return _internshipRepository.IsStudentEnrolled(internshipId, studentNumber);
+        // }
+
+        // Statistics and reporting methods
+        public int GetOrganizationCount()
+        {
+            return _organizationRepository.GetAll().Count();
+        }
+
+        public int GetStudentCount()
+        {
+            return _studentRepository.GetAll().Count();
+        }
+
+        public int GetActiveInternshipCount()
+        {
+            return _internshipRepository.GetActiveInternships().Count;
+        }
+
+        public int GetAssignmentCount()
+        {
+            return _assignmentRepository.GetAll().Count();
+        }
+
+        // Search methods
+        public List<Organization> SearchOrganizationsByName(string searchTerm)
+        {
+            return _organizationRepository.SearchByName(searchTerm);
+        }
+
+        public List<Student> SearchStudentsByName(string searchTerm)
+        {
+            return _studentRepository.SearchByName(searchTerm).ToList();
+        }
+
+        // Get assignments by various criteria
+        public List<Assignment> GetAssignmentsByInternshipId(int internshipId)
+        {
+            return _assignmentRepository.GetAssignmentsByInternshipId(internshipId);
+        }
+
+        public bool UpdateInternship(Internship internship)
+        {
+            return _internshipRepository.Update(internship);
+        }
+
+        public bool UpdateOrganization(Organization organization)
+        {
+            return _organizationRepository.Update(organization);
+        }
+
+        // Delete methods (use with caution)
+        public bool DeleteStudent(int studentNumber)
+        {
+            return _studentRepository.Delete(studentNumber);
+        }
+
+        public bool DeleteInternship(int internshipId)
+        {
+            return _internshipRepository.Delete(internshipId);
+        }
+
+        public bool DeleteOrganization(int organizationId)
+        {
+            return _organizationRepository.Delete(organizationId);
+        }
+
+        // Check existence methods
+        public bool OrganizationExists(int organizationId)
+        {
+            return _organizationRepository.Exists(organizationId);
+        }
+
+        public bool InternshipExists(int internshipId)
+        {
+            return _internshipRepository.Exists(internshipId);
+        }
+
+        public bool StudentExists(int studentNumber)
+        {
+            return _studentRepository.StudentExists(studentNumber);
         }
     }
 }
